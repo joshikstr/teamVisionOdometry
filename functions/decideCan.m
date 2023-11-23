@@ -1,0 +1,45 @@
+function [bbox, name, isCan] = decideCan(detectedCans)
+    %DECIDECAN Summary of this function goes here
+    %   Detailed explanation goes here
+    
+    bbox1 = detectedCans.Cola_oder_Fanta;
+    bbox2 = detectedCans.Pepsi;
+    bbox3 = detectedCans.Sprite;
+
+    namesValid = [];
+
+    if ~isempty([bbox1;bbox2;bbox3])
+        isCan = true;
+        names = fieldnames(detectedCans);
+        for can = 1:size(names)
+            bbox = detectedCans.(names{can});
+            if ~isempty(bbox)
+                if size(bbox,1) == 1
+                    namesValid = [namesValid; string(names{can})];
+                    area(can) = bbox(1,3) * bbox(1,4);
+                else 
+                    for i = 1:size(bbox,1)
+                        areabbox(i) = bbox(i,3) * bbox(i,4);
+                    end
+                    [~, idx] = sort(areabbox,'descend');
+                    bbox = bbox(idx,:);
+                    bbox = bbox(1,:);
+                    detectedCans.(names{can}) = bbox;
+                    namesValid = [namesValid; string(names{can})];
+                    area(can) = bbox(1,3) * bbox(1,4);
+                end
+            end
+        end
+        area = nonzeros(area);
+        [~, idx] = sort(area,'descend');
+        namesValid = namesValid(idx);
+        name = namesValid(1);
+        bbox = detectedCans.(name);
+    else
+        isCan = false;
+        name = [];
+        bbox = [];
+    end
+
+end
+
