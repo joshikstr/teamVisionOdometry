@@ -1,0 +1,16 @@
+function pose = odomMsg2Pose(msg_odom)
+    %TRANSFORMTFMSGINTOPOSE Summary of this function goes here
+    %   Detailed explanation goes here
+     trans = [msg_odom.Pose.Pose.Position.X; ...
+         msg_odom.Pose.Pose.Position.Y;...
+         msg_odom.Pose.Pose.Position.Z];
+
+     quat = [msg_odom.Pose.Pose.Orientation.W, ...
+         msg_odom.Pose.Pose.Orientation.X, ...
+         msg_odom.Pose.Pose.Orientation.Y, ...
+         msg_odom.Pose.Pose.Orientation.Z];
+
+     pose = quat2tform(quat);
+     pose(1:3,4) = trans;
+    
+end

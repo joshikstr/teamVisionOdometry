@@ -2,7 +2,7 @@ function [bbox, name, isCan] = decideCan(detectedCans)
     %DECIDECAN Summary of this function goes here
     %   Detailed explanation goes here
     
-    bbox1 = detectedCans.Cola_oder_Fanta;
+    bbox1 = detectedCans.ColaoderFanta;
     bbox2 = detectedCans.Pepsi;
     bbox3 = detectedCans.Sprite;
 
