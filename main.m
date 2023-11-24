@@ -42,9 +42,8 @@ msgPointCanBool = rosmessage(point_bool_pub);
 
 %% get initrinsics
 
-cam_info = receive(zed_sub_info);
-focalLength = [cam_info.K(1), cam_info.K(3)];
-principalPoint = [cam_info.K(5), cam_info.K(6)];
+focalLength = [cam_info.K(1), cam_info.K(5)];
+principalPoint = [cam_info.K(3), cam_info.K(6)];
 imageSize = [double(cam_info.Height), double(cam_info.Width)];
 intrinsics = cameraIntrinsics(focalLength,principalPoint,imageSize);
 
