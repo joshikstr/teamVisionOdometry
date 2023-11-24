@@ -48,47 +48,51 @@ principalPoint = [cam_info.K(5), cam_info.K(6)];
 imageSize = [double(cam_info.Height), double(cam_info.Width)];
 intrinsics = cameraIntrinsics(focalLength,principalPoint,imageSize);
 
-%% get data from ROS
-  
-msg_left = receive(zed_sub_left);
-msg_depth = receive(zed_sub_depth);
-msg_tf = receive(tf_sub);
+%% main loop
 
-im_left = readImage(msg_left);
-im_depth = readImage(msg_depth);
-
-
-%% get point of can
-tic 
-
-detectedCans = detectCan(im_left);
-
-time = toc;
-
-[bbox, name, isCan] = decideCan(detectedCans);
-
-if isCan 
+while true
     
-    msgPointCanBool.Data = isCan;
+    % get data 
+    msg_left = receive(zed_sub_left);
+    msg_depth = receive(zed_sub_depth);
+    msg_tf = receive(tf_sub);
     
-    im_can = imcrop(im_depth,bbox);
-    ptCloud = pcfromdepth(im_can, 1, intrinsics);
-    ptCloud = getPtCloudWithoutNaN(ptCloud);
+    im_left = readImage(msg_left);
+    im_depth = readImage(msg_depth);
+    
+    
+    % get point of can
+    tic 
+    
+    detectedCans = detectCan(im_left);
+    
+    time = toc;
+    
+    [bbox, name, isCan] = decideCan(detectedCans);
+    
+    if isCan 
+    
+        msgPointCanBool.Data = isCan;
+        
+        im_can = imcrop(im_depth,bbox);
+        ptCloud = pcfromdepth(im_can, 1, intrinsics);
+        ptCloud = getPtCloudWithoutNaN(ptCloud);
+    
+        ROI = [-10 10 -10 10 0.15 1.7];
+        indices = findPointsInROI(ptCloud,ROI);
+        ptCloud = select(ptCloud, indices);
+        
+        pointCan = getPointCan(ptCloud);
+        pointCanLiDAR = coordinateTransformPoint(pointCan,LiDARPoseCam);
+        worldPoseLiDAR = TFMsg2Pose(msg_tf);
+        pointCanWorld = coordinateTransformPoint(pointCanLiDAR,worldPoseLiDAR);
+        msgPointCan = point2PointMsg(msgPointCan,pointCanWorld);
+        
+        send(point_pub,msgPointCan);
+        send(point_bool_pub,msgPointCanBool);
+    else
+        msgPointCanBool.Data = isCan;
+        send(point_bool_pub,msgPointCanBool);
+    end
 
-    ROI = [-10 10 -10 10 0.15 1.7];
-    indices = findPointsInROI(ptCloud,ROI);
-    ptCloud = select(ptCloud, indices);
-    
-    pointCan = getPointCan(ptCloud);
-    pointCanLiDAR = coordinateTransformPoint(pointCan,LiDARPoseCam);
-    worldPoseLiDAR = TFMsg2Pose(msg_tf);
-    pointCanWorld = coordinateTransformPoint(pointCanLiDAR,worldPoseLiDAR);
-    msgPointCan = point2PointMsg(msgPointCan,pointCanWorld);
-    
-    send(point_pub,msgPointCan);
-    send(point_bool_pub,msgPointCanBool);
-else
-    msgPointCanBool.Data = isCan;
-    send(point_bool_pub,msgPointCanBool);
 end
-
